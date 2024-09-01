@@ -2,18 +2,11 @@ local path = ({reaper.get_action_context()})[2]:match('^.+[\\//]')
 package.path = path .. "?.lua"
 
 local utils = require("rguilib.utils")
-local view = require("rguilib.view")
+local view_state = require("rguilib.view_state")
 local draw = require("rguilib.draw")
 
 local margin_x, margin_y = 10, 10
 local base_distance = 10
-
-local view_state = {
-    selected_track = nil,
-    width = gfx.w,
-    hight = gfx.h,
-    clean = true,
-}
 
 local function UpdateTrackFXChain(track, number_of_fx, base_y)
 	local fx_width = 250
@@ -71,61 +64,12 @@ local function update_selected_track(track)
 end
 
 
-view_state.events = {
-    function()
-        local selected_track = reaper.GetSelectedTrack(0, 0)
-        if view_state.selected_track ~= selected_track then
-            view_state.selected_track = selected_track
-            view_state.clean = false
-        end
-    end,
-    function()
-        if gfx.w ~= view_state.width or gfx.h ~= view_state.hight then
-            view_state.width = gfx.w
-            view_state.hight = gfx.h
-            view_state.clean = false
-        end
-    end,
-}
-
-function view_state.render()
-
-    for _, event in pairs(view_state.events) do
-        event()
-    end
-
-    if not view_state.clean then
-        update_selected_track(view_state.selected_track)
-        view_state.clean = true
-        utils.print("update")
-        gfx.update()
-    end
-end
-
-
-local vstack = view.VStack.new({
-    view.HStack.new({
-        view.Text.new("Hello"),
-        view.Text.new("World"),
-        view.Text.new("!")
-    }):set_spacing(10):set_margin(30, 10),
-    view.HStack.new({
-        view.Text.new("Hello"),
-        view.Text.new("Mom"),
-        view.Text.new("!")
-    }):set_spacing(20),
-    view.Button.new("Hello", function()
-        utils.print("Hello")
-    end):set_padding(20, 10),
-    view.Knob.new()
-}):set_spacing(0)
 
 
 
 
 local function main()
-    -- view_state.render()
-    vstack:render()
+    view_state.render()
     local char = gfx.getchar()
     if char ~= 27 and char ~= -1 then
         reaper.defer(main)

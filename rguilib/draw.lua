@@ -44,8 +44,18 @@ function M.roundrect(x, y, w, h, r, fill)
 end
 
 ---Draw a circle
+---@param x number horizontal position of center
+---@param y number vertical position of center
+---@param r number radius
+---@param fill boolean false for stroke, tur for fill
 function M.circle(x, y, r, fill)
     gfx.circle(x, y, r, fill, true)
+end
+
+
+
+function M.line(x1, y1, x2, y2)
+    gfx.line(x1, y1, x2, y2)
 end
 
 

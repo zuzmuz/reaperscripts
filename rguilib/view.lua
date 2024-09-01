@@ -68,13 +68,13 @@ function VStack.new(content)
     return setmetatable(new, {__index = Stack})
 end
 
-function Stack:render()
+function Stack:measure(drawables)
     local position = 0
     self.w, self.h = 0, 0
     for _, item in ipairs(self.content) do
         item:set_position(self.x + (1-self.direction) * position + self.margin_x,
                           self.y + self.direction * position + self.margin_y)
-        item:render()
+        item:measure(drawables)
 
         position = position + item.w * (1-self.direction) + item.h * self.direction + self.spacing
         self.w = math.max(self.w, item.w, self.w + (item.w + self.spacing)*(1 - self.direction))
@@ -93,10 +93,14 @@ function Text.new(text)
     return setmetatable(new, {__index = Text})
 end
 
-function Text:render()
+function Text:measure(drawables)
     self.w, self.h = gfx.measurestr(self.text)
     self.w = self.w + 2*self.margin_x
     self.h = self.h + 2*self.margin_y
+    drawables[#drawables+1] = self
+end
+
+function Text:render()
     draw.message(self.text, self.x, self.y)
 end
 
@@ -116,26 +120,30 @@ function Button:set_padding(padding_x, padding_y)
 end
 
 
-function Button:render()
+function Button:measure(drawables)
     self.text:set_position(self.x + self.padding_x, self.y + self.padding_y)
-    self.text:render()
+    self.text:measure(drawables)
     self.w = self.text.w + 2 * self.padding_x + 2*self.margin_x
     self.h = self.text.h + 2 * self.padding_y + 2*self.margin_y
-    if gfx.mouse_x > self.x and
-       gfx.mouse_x < self.x + self.w and
-       gfx.mouse_y > self.y and
-       gfx.mouse_y < self.y + self.h then
-        draw.rect(self.x, self.y, self.w, self.h, false)
-        -- TODO: click once
-        if gfx.mouse_cap == 1 then
-            self.action()
-        end
-    end
+    -- if gfx.mouse_x > self.x and
+    --    gfx.mouse_x < self.x + self.w and
+    --    gfx.mouse_y > self.y and
+    --    gfx.mouse_y < self.y + self.h then
+    --     draw.rect(self.x, self.y, self.w, self.h, false)
+    --     -- TODO: click once
+    --     if gfx.mouse_cap == 1 then
+    --         self.action()
+    --     end
+    -- end
 end
 
 
 local Knob = setmetatable(View.new(), {__index = View})
 
+
+---Create a new knob
+---@param radius number radius of knob
+---@return table
 function Knob.new(radius)
     local new = View.new()
     new.value = 0
@@ -144,10 +152,40 @@ function Knob.new(radius)
 end
 
 
+---@param get fun(): number callback to get binded value
+---@param set fun(value: number) callback to set binded value
+function Knob:set_binding_value(get, set)
+    self.get_binded_value = get
+    self.set_binded_value = set
+end
+
+function Knob:measure(drawables)
+    local value_str = tostring(math.floor(self.value*100))
+    local value_str_w, value_str_h = gfx.measurestr(value_str)
+    self.value_str_h = value_str_h
+
+    self.w = math.max(2*self.radius, value_str_w)
+    self.h = 2*self.radius + value_str_h
+
+    drawables[#drawables+1] = self
+end
+
+
 function Knob:render()
-    self.w = self.radius * 2
-    self.h = self.radius * 2
-    draw.circle(self.x + self.radius, self.y + self.radius, self.radius, false)
+    draw.circle(self.x + 0.5*self.w, self.y + self.radius, self.radius, false)
+
+    local angle = 2 * math.pi * (2/3 - (self.value*5)/6)
+
+    draw.line(self.x + 0.5*self.w * (1 + math.cos(angle)),
+              self.y + self.radius * (1 - math.sin(angle)),
+              self.x + 0.5*self.w,
+              self.y + self.radius)
+
+
+    draw.message(math.floor(self.value*100),
+                 self.x + 0.5*self.w,
+                 self.y + 2*self.radius + 0.5*self.value_str_h,
+                 true)
 end
 
 
