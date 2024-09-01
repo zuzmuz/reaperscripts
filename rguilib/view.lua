@@ -188,6 +188,17 @@ function Knob:render()
                  true)
 end
 
+function Knob:handle(mouse_event)
+    if mouse_event.y <= self.y + 2*self.radius and
+       mouse_event.type == "drag" then
+
+        utils.print("dy " .. mouse_event.dy)
+
+        self.value = math.max(0, math.min(1, self.value - 0.01*mouse_event.dy))
+    end
+    utils.print("event " .. mouse_event.type)
+end
+
 
 return {
     View = View,
