@@ -1,77 +1,23 @@
-track = nil
-margin_x, margin_y = 10, 10
-base_distance = 10
+local path = ({reaper.get_action_context()})[2]:match('^.+[\\//]')
+package.path = path .. "?.lua"
 
--- Helpful functions
+local utils = require("rguilib.utils")
+local view = require("rguilib.view")
+local draw = require("rguilib.draw")
 
+local margin_x, margin_y = 10, 10
+local base_distance = 10
 
-
-local function RoundRect(x, y, w, h, r, antialias, fill)
-	
-	if not fill then
-		gfx.roundrect(x, y, w, h, r, antialias)
-	elseif h >= 2 * r then
-		
-		-- Corners
-		gfx.circle(x + r, y + r, r, fill, antialias)		-- top-left
-		gfx.circle(x + w - r, y + r, r, fill, antialias)		-- top-right
-		gfx.circle(x + w - r, y + h - r, r , fill, antialias)	-- bottom-right
-		gfx.circle(x + r, y + h - r, r, fill, antialias)		-- bottom-left
-		
-		-- Ends
-		gfx.rect(x, y + r, r, h - r * 2)
-		gfx.rect(x + w - r, y + r, r + 1, h - r * 2)
-			
-		-- Body + sides
-		gfx.rect(x + r, y, w - r * 2, h + 1)
-		
-	else
-	
-		r = h / 2 - 1
-	
-		-- Ends
-		gfx.circle(x + r, y + r, r, true, antialias)
-		gfx.circle(x + w - r, y + r, r, true, antialias)
-		
-		-- Body
-		gfx.rect(x + r, y, w - r * 2, h)
-		
-	end	
-	
-end
-
--- Basic titles
-local function ShowDefaultMessage(message)
-	gfx.setfont(1)
-	gfx.set(0.9, 0.9, 0.9, 1)
-	local message_w, message_h = gfx.measurestr(message)
-	local txt_x = (gfx.w - message_w) / 2
-	local txt_y = (gfx.h - message_h) / 2
-	gfx.x = txt_x
-	gfx.y = txt_y
-	gfx.drawstr(message)
-end
-
-local function DrawMessage(message, x, y, center, r, g, b)
-	gfx.setfont(2)
-	if r and g and b then
-		gfx.set(r, g, b, 1)
-	else 
-		gfx.set(0.9, 0.9, 0.9, 1)
-	end
-	if center then
-		local message_w, message_h = gfx.measurestr(message)
-		x = x - message_w/2
-		y = y - message_h/2
-	end
-	gfx.x, gfx.y = x, y
-	gfx.drawstr(message)
-end
-
+local view_state = {
+    selected_track = nil,
+    width = gfx.w,
+    hight = gfx.h,
+    clean = true,
+}
 
 local function UpdateTrackFXChain(track, number_of_fx, base_y)
 	local fx_width = 250
-	
+
 	for i=0, number_of_fx-1 do
 		local fx_x, fx_y = margin_x + i*fx_width, base_y + base_distance
 
@@ -83,9 +29,13 @@ local function UpdateTrackFXChain(track, number_of_fx, base_y)
 		else
 			gfx.set(0.05, 0.05, 0.05, 1)
 		end
-		RoundRect(fx_x, fx_y,
-				  fx_width - base_distance, gfx.h - base_y - base_distance - margin_y, base_distance, true, true)
-		
+		draw.roundrect(fx_x,
+                       fx_y,
+				       fx_width - base_distance,
+                       gfx.h - base_y - base_distance - margin_y,
+                       base_distance,
+                       true)
+
 		local r, g, b = 0.9, 0.9, 0.9
 
 		if not enabled then
@@ -93,9 +43,9 @@ local function UpdateTrackFXChain(track, number_of_fx, base_y)
 		end
 
 		if ret_value then
-			DrawMessage(fx_name, 
-				fx_x + (fx_width - base_distance)/2, 
-				fx_y + (gfx.h - base_y - base_distance - margin_y)/2, true, r, g, b)
+			draw.message(fx_name,
+				         fx_x + (fx_width - base_distance)/2,
+				         fx_y + (gfx.h - base_y - base_distance - margin_y)/2, true, r, g, b)
 		end
 
 
@@ -103,47 +53,88 @@ local function UpdateTrackFXChain(track, number_of_fx, base_y)
 	end
 end
 
-local function UpdateSelectedTrack(track)
+
+local function update_selected_track(track)
 	if not track then
-		ShowDefaultMessage("no selected track")
+		draw.center_message("no selected track")
 		return
 	end
 
-	local ret_value, track_name = reaper.GetTrackName(track)
-	if not ret_value then
-		ShowDefaultMessage("something wrong")
+	local status, track_name = reaper.GetTrackName(track)
+	if not status then
+		draw.center_message("something wrong")
 		return
 	end
-	
-	DrawMessage(track_name, margin_x, margin_y)
-	number_of_fx = reaper.TrackFX_GetCount(track)
-	local track_name_w, track_name_h = gfx.measurestr(track_name)
-	DrawMessage(number_of_fx, margin_x + track_name_w + base_distance, margin_y)
-
-
-	UpdateTrackFXChain(track, number_of_fx, margin_y + track_name_h)
+	local number_of_fx = reaper.TrackFX_GetCount(track)
+	draw.message(track_name .. " " .. number_of_fx, margin_x, margin_y)
+	UpdateTrackFXChain(track, number_of_fx, margin_y)
 end
 
 
+view_state.events = {
+    function()
+        local selected_track = reaper.GetSelectedTrack(0, 0)
+        if view_state.selected_track ~= selected_track then
+            view_state.selected_track = selected_track
+            view_state.clean = false
+        end
+    end,
+    function()
+        if gfx.w ~= view_state.width or gfx.h ~= view_state.hight then
+            view_state.width = gfx.w
+            view_state.hight = gfx.h
+            view_state.clean = false
+        end
+    end,
+}
+
+function view_state.render()
+
+    for _, event in pairs(view_state.events) do
+        event()
+    end
+
+    if not view_state.clean then
+        update_selected_track(view_state.selected_track)
+        view_state.clean = true
+        utils.print("update")
+        gfx.update()
+    end
+end
 
 
-local function Main()
-	local char = gfx.getchar()
-	local selected_track = reaper.GetSelectedTrack(0, 0)
-	-- if selected_track ~= track then
-		-- track = selected_track
-		UpdateSelectedTrack(selected_track)
-	-- end
-	if char ~= 27 and char ~= -1 then
-		reaper.defer(Main)
-	end
-	gfx.update()
-	-- reaper.ShowConsoleMsg("track name :" .. track_name .. "\n")
+local vstack = view.VStack.new({
+    view.HStack.new({
+        view.Text.new("Hello"),
+        view.Text.new("World"),
+        view.Text.new("!")
+    }):set_spacing(10):set_margin(30, 10),
+    view.HStack.new({
+        view.Text.new("Hello"),
+        view.Text.new("Mom"),
+        view.Text.new("!")
+    }):set_spacing(20),
+    view.Button.new("Hello", function()
+        utils.print("Hello")
+    end):set_padding(20, 10),
+    view.Knob.new()
+}):set_spacing(0)
+
+
+
+
+local function main()
+    -- view_state.render()
+    vstack:render()
+    local char = gfx.getchar()
+    if char ~= 27 and char ~= -1 then
+        reaper.defer(main)
+    end
 end
 
 gfx.clear = 0x202020
 gfx.init("Channel Strip", 1000, 400, 1)
 gfx.setfont(1, "Arial", 24)
 gfx.setfont(2, "Arial", 16)
-UpdateSelectedTrack(selected_track)
-reaper.defer(Main)
+
+reaper.defer(main)

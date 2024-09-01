@@ -18,11 +18,11 @@ local last_track = reaper.GetSelectedTrack(0, num_tracks-1)
 local last_track_depth = reaper.GetMediaTrackInfo_Value(last_track, 'I_FOLDERDEPTH')
 if last_track_depth ~= 1 then
   reaper.SetMediaTrackInfo_Value(last_track, 'I_FOLDERDEPTH', last_track_depth-1)
-else 
+else
   local num_all_tracks = reaper.GetNumTracks(0)
   local last_track_index = reaper.GetMediaTrackInfo_Value(last_track, 'IP_TRACKNUMBER')
   while last_track_index < num_all_tracks do
-    track = reaper.GetTrack(0, last_track_index)
+    local track = reaper.GetTrack(0, last_track_index)
     last_track_depth = reaper.GetMediaTrackInfo_Value(track, 'I_FOLDERDEPTH')
     if last_track_depth < 0 then
       break

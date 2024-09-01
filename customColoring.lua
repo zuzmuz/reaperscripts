@@ -35,8 +35,8 @@ local track_color_indices = {
     syn = 90,
     pad = 110,
     win = 140,
-    gui = 190,
-    bas = 220,
+    gui = 200,
+    bas = 230,
     pia = 260,
     key = 280,
     vid = 320,
@@ -72,8 +72,8 @@ local default_color_indices = {
 }
 
 local last_color_index = {0,0,0}
-local saturation = 0.58
-local value = 0.85
+local saturation = 0.55
+local value = 0.8
 
 
 local num_tracks = reaper.CountTracks()
@@ -101,7 +101,7 @@ for i = 0, num_tracks - 1 do
                                         last_color_index[2],
                                         last_color_index[3]))
         last_color_index[1] = last_color_index[1]+1
-        last_color_index[3] = last_color_index[3]*0.95
+        last_color_index[3] = last_color_index[3]*0.98
     end
 end
 

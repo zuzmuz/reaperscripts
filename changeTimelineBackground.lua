@@ -1,4 +1,4 @@
-loopState = reaper.GetSetRepeat(-1)
+local loopState = reaper.GetSetRepeat(-1)
 
 if loopState == 0 then
   reaper.SetThemeColor('col_tl_bgsel2', -1, 1)
