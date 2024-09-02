@@ -201,10 +201,10 @@ end
 
 
 return {
-    View = View,
-    HStack = HStack,
-    VStack = VStack,
-    Text = Text,
-    Button = Button,
-    Knob = Knob,
+    View = View.new,
+    HStack = HStack.new,
+    VStack = VStack.new,
+    Text = Text.new,
+    Button = Button.new,
+    Knob = Knob.new,
 }

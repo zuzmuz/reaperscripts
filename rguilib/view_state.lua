@@ -63,22 +63,22 @@ end
 
 M.drawables = {}
 
-M.view = view.VStack.new({
-    view.HStack.new({
-        view.Text.new("Hello"),
-        view.Text.new("World"),
-        view.Text.new("!")
-    }):set_spacing(10):set_margin(30, 10),
-    view.HStack.new({
-        view.Text.new("Hello"),
-        view.Text.new("Mom"),
-        view.Text.new("!")
-    }):set_spacing(20),
-    view.Button.new("Hello", function()
+M.view = view.VStack {
+    view.HStack {
+        view.Text("Hello"),
+        view.Text("World"),
+        view.Text("!")
+    }:set_spacing(10):set_margin(30, 10),
+    view.HStack {
+        view.Text("Hello"),
+        view.Text("Mom"),
+        view.Text("!")
+    }:set_spacing(20),
+    view.Button("Hello", function()
         utils.print("Hello")
     end):set_padding(20, 10),
-    view.Knob.new(20)
-}):set_spacing(0)
+    view.Knob(20)
+}:set_spacing(0)
 
 
 function M.render()
@@ -93,7 +93,7 @@ function M.render()
     if mouse_event then
         for _, drawable in ipairs(M.drawables) do
             if drawable.handle and
-                mouse_event.x >= drawable.x and mouse_event.x <= drawable.x + drawable.h and
+                mouse_event.x >= drawable.x and mouse_event.x <= drawable.x + drawable.w and
                 mouse_event.y >= drawable.y and mouse_event.y <= drawable.y + drawable.h then
 
                 drawable:handle(mouse_event)
