@@ -69,10 +69,11 @@ local default_color_indices = {
     x = 235,
     y = 245,
     z = 255,
+    [" "] = 200
 }
 
 local last_color_index = {0,0,0}
-local saturation = 0.55
+local saturation = 0.45
 local value = 0.8
 
 
@@ -83,8 +84,9 @@ for i = 0, num_tracks - 1 do
     local status, track_name = reaper.GetTrackName(track)
 
     if status then
-        local folder_depth = reaper.GetTrackDepth(track)
-        if folder_depth == 0 then
+        local folder_depth1 = reaper.GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH")
+        local folder_depth2 = reaper.GetTrackDepth(track)
+        if folder_depth1 == 1 or folder_depth2 == 0 then
             last_color_index = { track_color_indices[track_name:sub(1,3)],
                                  saturation,
                                  value }
@@ -94,14 +96,14 @@ for i = 0, num_tracks - 1 do
                                      value }
             end
             if not last_color_index[1] then
-                last_color_index = { math.random(360), saturation, value }
+                last_color_index = { 0, 0, 0.5 }
             end
         end
         reaper.SetTrackColor(track, hsv(last_color_index[1],
                                         last_color_index[2],
                                         last_color_index[3]))
-        last_color_index[1] = last_color_index[1]+1
-        last_color_index[3] = last_color_index[3]*0.98
+        last_color_index[1] = (last_color_index[1]+3) % 360
+        last_color_index[3] = last_color_index[3]*0.97
     end
 end
 

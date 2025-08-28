@@ -2395,26 +2395,6 @@ function El:arrange()
       end
     end
     
-    if self.elAlign then
-    
-      if self.elAlign.x then
-        local target = self.elAlign.x[1]
-        if self.elAlign.x[1]=='parent' then target = self.parent end
-        tx,tw = target.drawX or target.x, target.drawW or target.w 
-        if self.elAlign.x[2]=='centre' then self.drawX = tx+(tw/2)-(self.drawW/2)+ (self.x*scaleMult) end 
-        if self.elAlign.x[2]=='right' then self.drawX = tx + tw - self.drawW + (self.x*scaleMult) end
-      end
-      
-      if self.elAlign.y then
-        local target = self.elAlign.y[1]
-        if self.elAlign.y[1]=='parent' then target = self.parent end
-        ty,th = target.drawY or target.y, target.drawH or target.h
-        if self.elAlign.y[2]=='centre' then self.drawY = ty+(th/2)-(self.drawH/2)+self.y end
-        if self.elAlign.y[2]=='bottom' then reaper.ShowConsoleMsg('element align bottom not done yet\n') end
-      end
-  
-    end
-    
     --check final position, cull if outside parent
     if self.drawX > px+pw then -- fully to the right of parent
       self.drawW = 0 -- using zero width (instead of some kind of 'don't draw' state) so that dirtyCheck notices
